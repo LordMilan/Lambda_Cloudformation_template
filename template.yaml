@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Sample Lambda Function with HTTP API Gateway
+
+Resources:
+  SampleFunctionAPI:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./functions
+      FunctionName: Sample-Function-API
+      Runtime: python3.10
+      Handler: sample_function.lambda_handler
+      Timeout: 45
+      MemorySize: 128
+      Environment:
+        Variables:
+          FOO: "BAR"
+      # Use policies to give permissions
+      # Policies:
+      #   - DynamoDBCrudPolicy: # Grant CRUD (Create, Read, Update, Delete)
+      #       TableName: !Ref SomeTable
+      #   - LambdaInvokePolicy: 
+      #       FunctionName: !Ref SomeFunction
+      Events:
+        ExplicitApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Method: ANY
+            Path: /users
+
+  # HTTP API Gateway
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: "prod"
+      RouteSettings:
+        "ANY /":
+          ThrottlingBurstLimit: 500
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+        AllowMethods:
+          - "*"
+        MaxAge: 600
+      Domain:
+        DomainName: "api.valorisinnovation.com"
+        CertificateArn: arn:aws:acm:ap-south-1:1234567:certificate/xxx #Genetare free certificate for your domain in ACM and use its ARN here
+        EndpointConfiguration: REGIONAL
+        BasePath:
+          - /
